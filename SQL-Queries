@@ -1,0 +1,79 @@
+
+
+#Question_1
+#which one of the staff member has more average rentals per month ?
+
+SELECT staff_id,CONCAT(first_name, ' ', last_name) as STAFF_FULL_NAME, AVG(rental) AS average_rental_monthly
+FROM
+(SELECT s.staff_id,   DATE_TRUNC('month',r.rental_date) AS day,
+s.first_name , s.last_name ,
+ COUNT(*) as RENTAL
+ FROM rental r
+ JOIN staff s
+ ON s.staff_id = r.staff_id
+where r.rental_date BETWEEN '2005-01-01' AND '2006-01-01'
+GROUP BY 1,2
+order by 2 ) sub
+
+GROUP by 1 ,2
+ORDER BY 3 DESC;
+
+/////////////////////////////////////////////////////////////////////
+#Question_2
+#How many rentals occurs in 2006 per month ?
+
+WITH Total_rent as (
+SELECT DATE_PART('month', rental_date) Months,
+COUNT(*) total_Rent_numbers
+FROM rental
+WHERE rental_date BETWEEN '2005-01-01' AND '2006-01-01'
+GROUP BY 1
+ORDER BY 2
+ )
+
+ SELECT * from Total_rent;
+
+////////////////////////////////////////////////////////////////////////
+#Question_3
+#List the film categories based on the most to least rentals?
+
+
+WITH t1 as (select c.name category_name , COUNT (r.rental_id) RENTALS
+from film f
+JOIN film_category fc
+on f.film_id = fc.film_id
+JOIN category c
+on fc.category_id = c.category_id
+JOIN inventory i
+ON i.film_id= f.film_id
+Join rental r
+ON i.inventory_id= r.inventory_id
+GROUP by 1 )
+
+SELECT * from T1
+order by 2 desc ;
+
+
+////////////////////////////////////////////////////////////////////
+
+#Question_4
+#List the Average Rentals for Each Category?
+
+
+WITH average_rent as (SELECT c.name CATEGORY_NAME, c.category_id CATEGORY_ID ,
+AVG(p.amount) over (partition by c.name) as Average_rentals
+FROM category c
+JOIN film_category fc
+ON c.category_id = fc.category_id
+JOIN film f
+ON f.film_id = fc.film_id
+JOIN inventory i
+ON i.film_id = f.film_id
+JOIN rental r
+ON i.inventory_id = r.inventory_id
+JOIN payment p
+ON r.rental_id = p.rental_id
+)
+
+SELECT DISTINCT * from average_rent
+Order by 1,2;
